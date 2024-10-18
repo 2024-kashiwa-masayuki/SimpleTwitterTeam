@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
+
 import chapter6.beans.User;
 import chapter6.beans.UserComment;
 import chapter6.beans.UserMessage;
@@ -23,28 +25,32 @@ public class TopServlet extends HttpServlet {
             throws IOException, ServletException {
 
 
-        boolean isShowMessageForm = false;
-        User user = (User) request.getSession().getAttribute("loginUser");
-        if (user != null) {
-            isShowMessageForm = true;
-        }
+    	boolean isShowMessageForm = false;
+    	User user = (User) request.getSession().getAttribute("loginUser");
 
-        String searchWord = request.getParameter("word");
-        String radiobutton = request.getParameter("radiobutton");
-        String userId = request.getParameter("user_id");
-        String start = request.getParameter("start");
-        String end = request.getParameter("end");
-        List<UserMessage> messages = new MessageService().select(userId, start, end, searchWord, radiobutton);
+    	if (user != null) {
+    		isShowMessageForm = true;
+    	}
 
-        //返信コメントを表示する
-        List<UserComment> comments = new CommentService().select();
+    	String searchWord = request.getParameter("word");
+    	String radiobutton = request.getParameter("radiobutton");
+    	String userId = request.getParameter("user_id");
+    	request.setAttribute("startFrom", true);
+    	String start = request.getParameter("start");
+    	String end = request.getParameter("end");
+    	List<UserMessage> messages = new MessageService().select(userId, start, end, searchWord, radiobutton);
 
-        request.setAttribute("start", start);
-        request.setAttribute("end", end);
-        request.setAttribute("messages", messages);
-        request.setAttribute("comments", comments);
-        request.setAttribute("isShowMessageForm", isShowMessageForm);
-        request.setAttribute("searchWord", request.getParameter("word"));
-        request.getRequestDispatcher("/top.jsp").forward(request, response);
+    	if (!StringUtils.isBlank(radiobutton) && radiobutton.equals("contain")) {
+    		request.setAttribute("startFrom", false);
+    	}
+
+    	List<UserComment> comments = new CommentService().select();
+    	request.setAttribute("start", start);
+    	request.setAttribute("end", end);
+    	request.setAttribute("messages", messages);
+    	request.setAttribute("comments", comments);
+    	request.setAttribute("searchWord", request.getParameter("word"));
+    	request.setAttribute("isShowMessageForm", isShowMessageForm);
+    	request.getRequestDispatcher("/top.jsp").forward(request, response);
     }
 }
